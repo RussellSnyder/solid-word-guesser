@@ -10,7 +10,7 @@ function App() {
     <Router>
       <Route path="/" component={CreateGamePage} />
       <Route path="/create" component={CreateGamePage} />
-      <Route path="/play" component={WordGuesserGamePage} />
+      <Route path="/play/:word" component={WordGuesserGamePage} />
     </Router>
   );
 }

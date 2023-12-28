@@ -1,6 +1,6 @@
 import {
   JSXElement,
-  ParentComponent,
+  ParentProps,
   createContext,
   createSignal,
   useContext,
@@ -53,26 +53,25 @@ const SPECIAL_INPUT = {
 const isSpecialInput = (input: string) =>
   Object.keys(SPECIAL_INPUT).includes(input);
 
-function useProviderValue() {
+function useProviderValue(wordToGuess: string) {
   const [hasWon, setHasWon] = createSignal(false);
   const [activeIndex, setActiveIndex] = createSignal(0);
-  const [wordToGuess, setWordToGuess] = createSignal<string>("POLICE");
 
   const [guessCount, setGuessCount] = createSignal(0);
   const [letterGrid, setLetterGrid] = createStore<LetterGrid>(
-    generateLettterGrid(wordToGuess()) ?? []
+    generateLettterGrid(wordToGuess) ?? []
   );
 
   const checkWord = () => {
-    const activeIndexRow = getActiveRow(activeIndex(), wordToGuess().length);
+    const activeIndexRow = getActiveRow(activeIndex(), wordToGuess.length);
 
     const letterInfos = letterGrid.filter(
       (letterInfo) => letterInfo.row === activeIndexRow
     );
 
     const newLettersInfo: LetterInfo[] = letterInfos.map((letterInfo, i) => {
-      const isInCorrrectPosition = wordToGuess()[i] === letterInfo.letter;
-      const isInWord = wordToGuess().includes(letterInfo.letter);
+      const isInCorrrectPosition = wordToGuess[i] === letterInfo.letter;
+      const isInWord = wordToGuess.includes(letterInfo.letter);
 
       return {
         ...letterInfo,
@@ -90,7 +89,7 @@ function useProviderValue() {
     );
 
     const wordToCheck = letterInfos.map(({ letter }) => letter).join("");
-    if (wordToCheck === wordToGuess()) {
+    if (wordToCheck === wordToGuess) {
       setHasWon(true);
       alert("you won!");
     }
@@ -103,19 +102,19 @@ function useProviderValue() {
   };
 
   const incrementActiveIndexIfInRow = () => {
-    if (!isActiveIndexLastColumnInRow(activeIndex(), wordToGuess().length)) {
+    if (!isActiveIndexLastColumnInRow(activeIndex(), wordToGuess.length)) {
       setActiveIndex((i) => i + 1);
     }
   };
   const decrementActiveIndexIfInRow = () => {
-    if (!isActiveIndexFirstColumnInRow(activeIndex(), wordToGuess().length)) {
+    if (!isActiveIndexFirstColumnInRow(activeIndex(), wordToGuess.length)) {
       setActiveIndex((i) => i - 1);
     }
   };
 
   const activateNextRow = () => {
     setActiveIndex(
-      getNextActiveRowFirstColumnIndex(activeIndex(), wordToGuess().length)
+      getNextActiveRowFirstColumnIndex(activeIndex(), wordToGuess.length)
     );
   };
 
@@ -184,8 +183,12 @@ export type GameContextType = ReturnType<typeof useProviderValue>;
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
-export const GameProvider: ParentComponent = (props) => {
-  const value = useProviderValue();
+interface GameProviderProps extends ParentProps {
+  wordToGuess: string;
+}
+
+export const GameProvider = (props: GameProviderProps) => {
+  const value = useProviderValue(props.wordToGuess);
 
   return (
     <GameContext.Provider value={value}>{props.children}</GameContext.Provider>

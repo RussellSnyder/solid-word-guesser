@@ -1,3 +1,4 @@
+import { useNavigate } from "@solidjs/router";
 import { For, createResource, createSignal } from "solid-js";
 import { Input } from "../components/Input";
 
@@ -26,6 +27,7 @@ const fetchRandomWord = async ({
 };
 
 export default () => {
+  const navigate = useNavigate();
   const [randomWordOptions, setRandomWordOptions] =
     createSignal<FetchRandomWordOptions>(
       { language: "en", length: 5 },
@@ -41,6 +43,11 @@ export default () => {
   const setChosenWordToRandom = async () => {
     const newRandomWord = await refetchRandomWord();
     setChosenWord(newRandomWord);
+  };
+
+  const createGame = () => {
+    // TODO encode and decode the word
+    navigate(`/play/${chosenWord()}`);
   };
 
   return (
@@ -120,6 +127,7 @@ export default () => {
             />
             <div class="flex items-center">
               <button
+                onClick={createGame}
                 class="w-full bg-emerald-500 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                 type="button"
               >
