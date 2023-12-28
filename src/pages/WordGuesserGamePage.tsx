@@ -2,12 +2,15 @@ import { useNavigate, useParams } from "@solidjs/router";
 import { Keyboard } from "../components/Keyboard";
 import { LetterGrid } from "../components/LetterGrid";
 import { GameProvider } from "../providers/GameProvider";
+import { decrypt } from "../utils/encryption.utils";
 
 export default () => {
   const navigate = useNavigate();
   const params = useParams();
 
   const { word } = params;
+
+  const wordToGuess = decrypt(word);
 
   return (
     <div class="container mx-auto px-4">
@@ -21,7 +24,7 @@ export default () => {
       <div class="mt-20 mb-10">
         <h1 class="text-4xl text-center">Guess the word</h1>
       </div>
-      <GameProvider wordToGuess={word}>
+      <GameProvider wordToGuess={wordToGuess}>
         <div class="mb-16">
           <LetterGrid />
         </div>

@@ -1,6 +1,7 @@
 import { useNavigate } from "@solidjs/router";
 import { For, createResource, createSignal } from "solid-js";
 import { Input } from "../components/Input";
+import { encrypt } from "../utils/encryption.utils";
 
 const AVAILABLE_LANGUAGES = {
   en: "English",
@@ -47,7 +48,7 @@ export default () => {
 
   const createGame = () => {
     // TODO encode and decode the word
-    navigate(`/play/${chosenWord()}`);
+    navigate(`/play/${encrypt(chosenWord())}`);
   };
 
   return (
