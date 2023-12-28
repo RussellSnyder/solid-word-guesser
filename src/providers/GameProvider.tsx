@@ -85,7 +85,7 @@ function useProviderValue(wordToGuess: string) {
     if (activeIndexRow < NUMBER_OF_ROWS) {
       setActiveIndex((index) => index + 1);
     } else {
-      alert("you lost!");
+      alert(`you lost! the word was ${wordToGuess}`);
     }
   };
 
