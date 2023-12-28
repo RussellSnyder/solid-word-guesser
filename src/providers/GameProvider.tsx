@@ -1,10 +1,4 @@
-import {
-  JSXElement,
-  ParentProps,
-  createContext,
-  createSignal,
-  useContext,
-} from "solid-js";
+import { ParentProps, createContext, createSignal, useContext } from "solid-js";
 import { createStore, produce } from "solid-js/store";
 import { LetterGrid, LetterInfo } from "../types";
 import {
@@ -16,11 +10,6 @@ import {
 import { isLetter } from "../utils/string.utils";
 
 const NUMBER_OF_ROWS = 6;
-
-interface Props {
-  wordToGuess: string;
-  children: JSXElement;
-}
 
 const generateLettterGrid = (
   wordToGuess: string | undefined
@@ -54,10 +43,9 @@ const isSpecialInput = (input: string) =>
   Object.keys(SPECIAL_INPUT).includes(input);
 
 function useProviderValue(wordToGuess: string) {
-  const [hasWon, setHasWon] = createSignal(false);
+  const [_, setHasWon] = createSignal(false);
   const [activeIndex, setActiveIndex] = createSignal(0);
 
-  const [guessCount, setGuessCount] = createSignal(0);
   const [letterGrid, setLetterGrid] = createStore<LetterGrid>(
     generateLettterGrid(wordToGuess) ?? []
   );

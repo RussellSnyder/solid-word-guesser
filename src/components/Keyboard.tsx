@@ -23,7 +23,7 @@ export const Keyboard = () => {
   });
 
   onMount(() => {
-    const keyboard = new SimpleKeyboard({
+    new SimpleKeyboard({
       onKeyPress: (button) => submitLetter(button),
       layoutName: "default",
       layout: {
