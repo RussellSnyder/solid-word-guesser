@@ -1,9 +1,8 @@
 import { ParentProps, createContext, createSignal, useContext } from "solid-js";
 import { createStore, produce } from "solid-js/store";
-import { LetterGrid, LetterInfo } from "../types";
+import { keyboardLayout_en_us } from "../components/KeyboardLayouts";
+import { KeyStatus, LetterGrid, LetterInfo, SpecialValue } from "../types";
 import {
-  getActiveRow,
-  getNextActiveRowFirstColumnIndex,
   isActiveIndexFirstColumnInRow,
   isActiveIndexLastColumnInRow,
 } from "../utils/row.utils";
@@ -15,121 +14,132 @@ const generateLettterGrid = (
   wordToGuess: string | undefined
 ): LetterGrid | undefined => {
   if (!wordToGuess) return;
-  const totalLetterCount = NUMBER_OF_ROWS * wordToGuess.length;
-  const letterInfo: LetterInfo[] = Array.from(Array(totalLetterCount)).map(
-    (_, i) => {
-      const column = i % wordToGuess.length;
-      const row = Math.floor(i / (totalLetterCount / NUMBER_OF_ROWS));
-      return {
-        index: i,
-        row,
-        column,
-        letter: "",
-      };
-    }
+  const rows = Array.from(Array(NUMBER_OF_ROWS));
+  const columns = Array.from(Array(wordToGuess.length));
+
+  return rows.map((_, row) =>
+    columns.map((_, column) => ({
+      index: row + column,
+      row,
+      column,
+      letter: "",
+    }))
   );
-  return letterInfo;
 };
 
-const SPECIAL_INPUT = {
-  ARROWLEFT: "ARROWLEFT",
-  ARROWRIGHT: "ARROWRIGHT",
-  ENTER: "ENTER",
-  "{ent}": "{ent}",
-  BACKSPACE: "BACKSPACE",
+const isSpecialValue = (value: string) => {
+  return value === SpecialValue.ENTER || value === SpecialValue.DELETE;
 };
 
-const isSpecialInput = (input: string) =>
-  Object.keys(SPECIAL_INPUT).includes(input);
-
+const generateInitialKeyboardStates = () => {
+  // TODO allow differnt keyboard layouts
+  const keys = keyboardLayout_en_us
+    .map((row) => row.map(({ value }) => value))
+    .flat()
+    .filter((value) => !isSpecialValue(value));
+  return keys.reduce(
+    (prev, curr) => ({ ...prev, [curr]: KeyStatus.DEFAULT }),
+    {}
+  );
+};
 function useProviderValue(wordToGuess: string) {
   const [_, setHasWon] = createSignal(false);
-  const [activeIndex, setActiveIndex] = createSignal(0);
+  const [activeRow, setActiveRow] = createSignal(0);
+  const [activeColumn, setActiveColumn] = createSignal(0);
 
   const [letterGrid, setLetterGrid] = createStore<LetterGrid>(
     generateLettterGrid(wordToGuess) ?? []
   );
 
+  const [keyboardStates, setKeyboardStates] = createStore<
+    Record<string, KeyStatus>
+  >(generateInitialKeyboardStates());
+
   const checkWord = () => {
-    const activeIndexRow = getActiveRow(activeIndex(), wordToGuess.length);
+    const letterInfos = letterGrid[activeRow()];
+    const wordToCheck = letterInfos.map(({ letter }) => letter).join("");
 
-    const letterInfos = letterGrid.filter(
-      (letterInfo) => letterInfo.row === activeIndexRow
-    );
+    if (wordToCheck.length < wordToGuess.length) {
+      // TODO show feedback that all letters must be guessed
+      return;
+    }
 
-    const newLettersInfo: LetterInfo[] = letterInfos.map((letterInfo, i) => {
-      const isInCorrrectPosition = wordToGuess[i] === letterInfo.letter;
-      const isInWord = wordToGuess.includes(letterInfo.letter);
+    const updatedRow: LetterInfo[] = [];
 
-      return {
+    letterInfos.forEach((letterInfo, i) => {
+      const { letter } = letterInfo;
+      const isInCorrrectPosition = wordToGuess[i] === letter;
+      const isInWord = wordToGuess.includes(letter);
+
+      updatedRow.push({
         ...letterInfo,
         isInCorrrectPosition,
         isInWord,
-      };
+      });
+
+      if (isInWord) {
+      } else {
+        setKeyboardStates(letter, KeyStatus.ABSENT);
+      }
+      if (isInCorrrectPosition) {
+        setKeyboardStates(letter, KeyStatus.CORRECT);
+      }
     });
 
+    console.log(wordToCheck, wordToGuess);
     setLetterGrid(
       produce((s) => {
-        newLettersInfo.forEach((letterInfo) => {
-          s[letterInfo.index] = letterInfo;
-        });
+        s[activeRow()] = updatedRow;
+        return s;
       })
     );
 
-    const wordToCheck = letterInfos.map(({ letter }) => letter).join("");
     if (wordToCheck === wordToGuess) {
       setHasWon(true);
       alert("you won!");
     }
 
-    if (activeIndexRow < NUMBER_OF_ROWS) {
-      setActiveIndex((index) => index + 1);
+    if (activeRow() < NUMBER_OF_ROWS) {
+      setActiveRow((index) => index + 1);
+      setActiveColumn(0);
     } else {
       alert(`you lost! the word was ${wordToGuess}`);
     }
   };
 
   const incrementActiveIndexIfInRow = () => {
-    if (!isActiveIndexLastColumnInRow(activeIndex(), wordToGuess.length)) {
-      setActiveIndex((i) => i + 1);
+    if (!isActiveIndexLastColumnInRow(activeColumn(), wordToGuess.length)) {
+      setActiveColumn((i) => i + 1);
     }
   };
   const decrementActiveIndexIfInRow = () => {
-    if (!isActiveIndexFirstColumnInRow(activeIndex(), wordToGuess.length)) {
-      setActiveIndex((i) => i - 1);
+    if (!isActiveIndexFirstColumnInRow(activeColumn(), wordToGuess.length)) {
+      setActiveColumn((i) => i - 1);
     }
   };
 
   const activateNextRow = () => {
-    setActiveIndex(
-      getNextActiveRowFirstColumnIndex(activeIndex(), wordToGuess.length)
-    );
+    setActiveRow((i) => i + 1);
   };
 
   const deleteLetterInActiveIndex = () => {
     setLetterGrid(
       produce((s) => {
-        s[activeIndex()] = {
-          ...s[activeIndex()],
+        const currentLetterInfo = s[activeRow()][activeColumn()];
+        s[activeRow()][activeColumn()] = {
+          ...currentLetterInfo,
           letter: "",
         };
       })
     );
   };
 
-  const handleSpecialInput = (input: keyof typeof SPECIAL_INPUT) => {
-    switch (input) {
-      case "ARROWLEFT":
-        decrementActiveIndexIfInRow();
-        return true;
-      case "ARROWRIGHT":
-        incrementActiveIndexIfInRow();
-        return true;
-      case "ENTER":
-      case "{ent}":
+  const handleSpecialValue = (value: SpecialValue) => {
+    switch (value) {
+      case SpecialValue.ENTER:
         checkWord();
         return true;
-      case "BACKSPACE":
+      case SpecialValue.DELETE:
         deleteLetterInActiveIndex();
         decrementActiveIndexIfInRow();
         return true;
@@ -139,31 +149,34 @@ function useProviderValue(wordToGuess: string) {
   return {
     wordToGuess,
     letterGrid,
-    submitLetter: (input: string) => {
-      if (isSpecialInput(input)) {
-        const shouldReturn = handleSpecialInput(
-          input as keyof typeof SPECIAL_INPUT
-        );
+    submitLetter: (value: string | SpecialValue) => {
+      if (value === SpecialValue.ENTER || value === SpecialValue.DELETE) {
+        const shouldReturn = handleSpecialValue(value);
         if (shouldReturn) return;
       }
-      if (!isLetter(input)) {
+      if (!isLetter(value)) {
         // TODO maybe show user that they input a non letter?
-        console.error(`'${input}' is not a letter`);
+        console.error(`'${value}' is not a letter`);
         return;
       }
 
       setLetterGrid(
-        (letterInfoInGrid) => letterInfoInGrid.index === activeIndex(),
-        "letter",
-        input
+        produce((s) => {
+          const currentLetterInfo = s[activeRow()][activeColumn()];
+          s[activeRow()][activeColumn()] = {
+            ...currentLetterInfo,
+            letter: value,
+          };
+        })
       );
       incrementActiveIndexIfInRow();
     },
-    activeIndex,
     incrementActiveIndexIfInRow,
     decrementActiveIndexIfInRow,
     activateNextRow,
-    setActiveIndex,
+    activeRow,
+    activeColumn,
+    keyboardStates,
   };
 }
 
@@ -189,8 +202,4 @@ export function useGame() {
     throw Error("useGame can only be used in a GameProvider");
   }
   return context;
-}
-
-export function useLetterGrid() {
-  return useGame().letterGrid;
 }

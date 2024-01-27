@@ -1,28 +1,45 @@
-import { createMemo } from "solid-js";
+import { Accessor, Show, createMemo } from "solid-js";
 import { useGame } from "../providers/GameProvider";
-import { LetterInfo, RowState } from "../types";
+import { ColumnState, LetterInfo, RowState } from "../types";
 
 interface LetterBoxProps {
   letterInfo: LetterInfo;
-  rowState: RowState;
+  column: number;
+  row: number;
 }
-export const LetterBox = ({ rowState, letterInfo }: LetterBoxProps) => {
-  const { setActiveIndex, activeIndex } = useGame();
+export const LetterBox = ({ row, column, letterInfo }: LetterBoxProps) => {
+  const { activeRow, activeColumn } = useGame();
 
-  const isActive = createMemo(() => activeIndex() === letterInfo.index);
+  const rowState: Accessor<RowState> = createMemo(() => {
+    if (activeRow() === row) {
+      return RowState.Active;
+    }
+    if (activeRow() > row) {
+      return RowState.Past;
+    }
+    return RowState.Future;
+  });
 
+  const columnState: Accessor<ColumnState> = createMemo(() => {
+    if (activeColumn() === column) {
+      return ColumnState.Active;
+    }
+    if (activeColumn() > column) {
+      return ColumnState.Past;
+    }
+    return ColumnState.Future;
+  });
+
+  let borderColor = "border-slate-500";
+  if (rowState() === RowState.Past) {
+    borderColor = "border-slate-300";
+  }
+  if (rowState() === RowState.Future) {
+    borderColor = "border-slate-500";
+  }
   return (
     <div
-      onClick={() =>
-        rowState === RowState.Active
-          ? setActiveIndex(letterInfo.index)
-          : undefined
-      }
-      classList={{
-        "border-slate-100": rowState === RowState.Past,
-        "border-slate-200": rowState === RowState.Future,
-      }}
-      class="col-span-1 mx-1 border-2 border-slate-500 min-h-14 max-w-18 flex content-center"
+      class={`col-span-1 mx-1 border-2 ${borderColor} min-h-14 max-w-18 flex content-center`}
     >
       <h3
         class={`text-center text-4xl w-14 flex mx-auto justify-center items-center relative`}
@@ -33,12 +50,14 @@ export const LetterBox = ({ rowState, letterInfo }: LetterBoxProps) => {
         }}
       >
         {letterInfo.letter}
-        <hr
-          class="w-10 bg-green-500 absolute bottom-1"
-          classList={{
-            "h-1": isActive(),
-          }}
-        />
+        <Show
+          when={
+            rowState() === RowState.Active &&
+            columnState() === ColumnState.Active
+          }
+        >
+          <hr class="w-10 bg-green-500 absolute bottom-1 h-1" />
+        </Show>
       </h3>
     </div>
   );

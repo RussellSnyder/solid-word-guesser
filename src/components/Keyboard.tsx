@@ -1,58 +1,57 @@
-import { useKeyDownEvent } from "@solid-primitives/keyboard";
-import { SimpleKeyboard } from "simple-keyboard";
-import "simple-keyboard/build/css/index.css";
-import { createEffect, onMount } from "solid-js";
+import { For, createMemo } from "solid-js";
 import { useGame } from "../providers/GameProvider";
+import { KeyStatus, KeyboardKey, SpecialValue } from "../types";
+import { keyboardLayout_en_us } from "./KeyboardLayouts";
 
-const keyDownEvent = useKeyDownEvent();
+interface KeyProps extends Omit<KeyboardKey, "status"> {}
+
+const statusBgColorMap: Record<KeyStatus, string> = {
+  [KeyStatus.DEFAULT]: "",
+  [KeyStatus.PRESENT]: "bg-yellow-300",
+  [KeyStatus.CORRECT]: "bg-green-300",
+  [KeyStatus.ABSENT]: "bg-slate-300",
+};
+
+const Key = (props: KeyProps) => {
+  const { label, value } = props;
+  const { submitLetter, keyboardStates } = useGame();
+
+  const bgColor = createMemo(() => statusBgColorMap[keyboardStates[value]]);
+
+  const minWidth =
+    value === SpecialValue.DELETE || value === SpecialValue.ENTER
+      ? "min-w-16"
+      : "min-w-8";
+  return (
+    <button
+      onClick={() => submitLetter(value)}
+      type="button"
+      class={`py-2 m-0.5 rounded-lg border-slate-400 border-2 text-2xl text-center flex justify-center ${bgColor()} ${minWidth}`}
+    >
+      {label}
+    </button>
+  );
+};
+
+interface KeyRowProps {
+  keys: KeyProps[];
+}
+
+const KeyRow = (props: KeyRowProps) => {
+  return (
+    <div class="flex justify-center">
+      <For each={props.keys}>{(keyProps) => <Key {...keyProps} />}</For>
+    </div>
+  );
+};
 
 export const Keyboard = () => {
-  let sentLetter = false;
+  // TODO allow different layouts somehow
+  const layout = keyboardLayout_en_us;
 
-  const { submitLetter } = useGame();
-
-  createEffect(() => {
-    const e = keyDownEvent();
-
-    if (e && !sentLetter) {
-      submitLetter(e.key.toLocaleUpperCase());
-      sentLetter = true;
-    } else {
-      sentLetter = false;
-    }
-  });
-
-  onMount(() => {
-    new SimpleKeyboard({
-      onKeyPress: (button) => submitLetter(button),
-      layoutName: "default",
-      layout: {
-        default: [
-          "Q W E R T Y U I O P",
-          "A S D F G H J K L",
-          "{shift} Z X C V B N M",
-          "{ent}",
-        ],
-        numbers: ["1 2 3", "4 5 6", "7 8 9", "{abc} 0 {backspace}"],
-      },
-      display: {
-        "{numbers}": "123",
-        "{ent}": "submit",
-        "{escape}": "esc ⎋",
-        "{tab}": "tab ⇥",
-        "{backspace}": "⌫",
-        "{capslock}": "caps lock ⇪",
-        "{shift}": "⇧",
-        "{controlleft}": "ctrl ⌃",
-        "{controlright}": "ctrl ⌃",
-        "{altleft}": "alt ⌥",
-        "{altright}": "alt ⌥",
-        "{metaleft}": "cmd ⌘",
-        "{metaright}": "cmd ⌘",
-        "{abc}": "ABC",
-      },
-    });
-  });
-
-  return <div class="simple-keyboard" />;
+  return (
+    <div class="m-auto">
+      <For each={layout}>{(keysInRow) => <KeyRow keys={keysInRow} />}</For>
+    </div>
+  );
 };

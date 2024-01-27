@@ -15,7 +15,7 @@ export default () => {
   return (
     <div class="container mx-auto px-4">
       <button
-        class="absolute top-10 right-10 bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"
+        class="absolute top-3 right-3 bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"
         type="button"
         onClick={() => navigate("/create")}
       >

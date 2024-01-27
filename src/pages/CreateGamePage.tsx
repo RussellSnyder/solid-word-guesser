@@ -1,6 +1,7 @@
 import { useNavigate } from "@solidjs/router";
 import { For, createResource, createSignal } from "solid-js";
 import { Input } from "../components/Input";
+import { WORD_MAX_LENGTH, WORD_MIN_LENGTH } from "../constants";
 import { encrypt } from "../utils/encryption.utils";
 
 const AVAILABLE_LANGUAGES = {
@@ -34,27 +35,30 @@ export default () => {
       { language: "en", length: 5 },
       { equals: false }
     );
-  const [randomWord, { refetch: refetchRandomWord }] = createResource(
+  const [_, { refetch: refetchRandomWord }] = createResource(
     randomWordOptions,
     fetchRandomWord
   );
 
+  const [isFetchingRandomWord, setIsFetchingRandomWord] = createSignal(false);
   const [chosenWord, setChosenWord] = createSignal<string>("");
 
   const setChosenWordToRandom = async () => {
+    setIsFetchingRandomWord(true);
     const newRandomWord = await refetchRandomWord();
     setChosenWord(newRandomWord);
+    setIsFetchingRandomWord(false);
   };
 
   const createGame = () => {
     // TODO encode and decode the word
-    navigate(`/play/${encrypt(chosenWord())}`);
+    navigate(`/play/${encrypt(chosenWord().toUpperCase())}`);
   };
 
   return (
-    <div class="container justify-center flex">
-      <div class="mx-auto p-16">
-        <h1 class="text-6xl mb-8">Create Game</h1>
+    <div class="container justify-center flex mx-auto">
+      <div class="p-16">
+        <h1 class="text-6xl mb-8 text-center">Create Game</h1>
 
         <div class="mb-20 w-full bg-white shadow-md rounded px-8 pt-6 pb-8">
           <div class="w-full flex gap-4">
@@ -70,12 +74,12 @@ export default () => {
                 }
                 inputProps={{
                   type: "number",
-                  minLength: 4,
-                  maxLength: 12,
+                  min: WORD_MIN_LENGTH,
+                  max: WORD_MAX_LENGTH,
                 }}
               />
             </div>
-            <div class="mb-4 flex-5">
+            <div class="mb-4 flex-1">
               <label
                 class="block text-gray-700 text-sm font-bold mb-2"
                 for="word"
@@ -109,7 +113,7 @@ export default () => {
             type="button"
             onClick={setChosenWordToRandom}
           >
-            {randomWord.loading
+            {isFetchingRandomWord()
               ? "Generating Word...."
               : "Generate Random Word"}
           </button>
@@ -124,7 +128,7 @@ export default () => {
                 minLength: 4,
                 maxLength: 12,
               }}
-              hint={"word must be between 4-12 letters"}
+              hint={`word must be between ${WORD_MIN_LENGTH}-${WORD_MAX_LENGTH} letters`}
             />
             <div class="flex items-center">
               <button

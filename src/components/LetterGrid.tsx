@@ -1,15 +1,12 @@
-import { Accessor, For, createMemo } from "solid-js";
+import { For } from "solid-js";
 import { useGame } from "../providers/GameProvider";
-import { RowState } from "../types";
-import { getActiveRow } from "../utils/row.utils";
 import { LetterBox } from "./LetterBox";
 
 export const LetterGrid = () => {
-  const { letterGrid, wordToGuess, activeIndex } = useGame();
+  const { letterGrid, wordToGuess } = useGame();
 
   return (
     <div class="mx-auto max-w-screen-lg">
-      {/* /TODO make cols responsive */}
       <div
         class={`grid gap-1`}
         classList={{
@@ -26,21 +23,16 @@ export const LetterGrid = () => {
         }}
       >
         <For each={letterGrid}>
-          {(letterInfo) => {
-            const rowState: Accessor<RowState> = createMemo(() => {
-              const activeIndexRow = getActiveRow(
-                activeIndex(),
-                wordToGuess.length
-              );
-              if (activeIndexRow === letterInfo.row) {
-                return RowState.Active;
-              }
-              if (activeIndexRow > letterInfo.row) {
-                return RowState.Past;
-              }
-              return RowState.Future;
-            });
-            return <LetterBox rowState={rowState()} letterInfo={letterInfo} />;
+          {(row, i) => {
+            return (
+              <For each={row}>
+                {(column, j) => {
+                  return (
+                    <LetterBox column={j()} row={i()} letterInfo={column} />
+                  );
+                }}
+              </For>
+            );
           }}
         </For>
       </div>
