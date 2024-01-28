@@ -1,15 +1,15 @@
 import { useNavigate } from "@solidjs/router";
-import { For, createResource, createSignal } from "solid-js";
+import { Icon } from "solid-heroicons";
+import { share } from "solid-heroicons/solid";
+import { For, createMemo, createResource, createSignal } from "solid-js";
 import { Input } from "../components/Input";
 import { WORD_MAX_LENGTH, WORD_MIN_LENGTH } from "../constants";
-import { encrypt } from "../utils/encryption.utils";
-
-const AVAILABLE_LANGUAGES = {
-  en: "English",
-};
+import { useUI } from "../providers/UIProvider";
+import { SupportedLanguage } from "../types";
+import { encodeGameCreationData } from "../utils/encryption.utils";
 
 interface FetchRandomWordOptions {
-  language: keyof typeof AVAILABLE_LANGUAGES;
+  language: SupportedLanguage;
   length: number;
 }
 
@@ -30,6 +30,7 @@ const fetchRandomWord = async ({
 
 export default () => {
   const navigate = useNavigate();
+  const { setModalOpen } = useUI();
   const [randomWordOptions, setRandomWordOptions] =
     createSignal<FetchRandomWordOptions>(
       { language: "en", length: 5 },
@@ -50,17 +51,32 @@ export default () => {
     setIsFetchingRandomWord(false);
   };
 
-  const createGame = () => {
-    // TODO encode and decode the word
-    navigate(`/play/${encrypt(chosenWord().toUpperCase())}`);
+  const generateUrlWithGameDataEncoded = () => {
+    return `/play/${encodeGameCreationData({
+      chosenWord: chosenWord(),
+    })}`;
   };
+
+  const createGame = () => {
+    navigate(generateUrlWithGameDataEncoded());
+  };
+
+  const isGameCreationDataValid = createMemo(() => {
+    if (chosenWord().length < WORD_MIN_LENGTH) return false;
+    if (chosenWord().length > WORD_MAX_LENGTH) return false;
+    return true;
+  });
 
   return (
     <div class="container justify-center flex mx-auto">
-      <div class="p-16">
+      <div class="p-8">
         <h1 class="text-6xl mb-8 text-center">Create Game</h1>
 
-        <div class="mb-20 w-full bg-white shadow-md rounded px-8 pt-6 pb-8">
+        <p class="mb-2">
+          You can either pass this device to a friend to solve or share the url
+          for somebody to solve on their own device
+        </p>
+        <div class="mb-10 w-full bg-white shadow-md rounded px-8 pt-6 pb-8">
           <div class="w-full flex gap-4">
             <div class="flex-1">
               <Input
@@ -93,15 +109,12 @@ export default () => {
                 onChange={(e) =>
                   setRandomWordOptions((options) => ({
                     ...options,
-                    language: e.currentTarget
-                      .value as keyof typeof AVAILABLE_LANGUAGES,
+                    language: e.currentTarget.value as SupportedLanguage,
                   }))
                 }
               >
-                <For each={Object.entries(AVAILABLE_LANGUAGES)}>
-                  {([languageCode, languageName]) => (
-                    <option value={languageCode}>{languageName}</option>
-                  )}
+                <For each={["en"]}>
+                  {(language) => <option value={language}>{language}</option>}
                 </For>
                 <option disabled>German (Coming Soon)</option>
               </select>
@@ -109,7 +122,7 @@ export default () => {
           </div>
 
           <button
-            class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            class="w-full bg-slate-400 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
             type="button"
             onClick={setChosenWordToRandom}
           >
@@ -122,7 +135,7 @@ export default () => {
           <form class="">
             <Input
               label="Choose a Word"
-              value={chosenWord()}
+              value={chosenWord().toUpperCase()}
               onInput={setChosenWord}
               inputProps={{
                 minLength: 4,
@@ -132,8 +145,33 @@ export default () => {
             />
             <div class="flex items-center">
               <button
+                disabled={!isGameCreationDataValid()}
+                onClick={() => {
+                  setModalOpen({
+                    type: "ShareGameModal",
+                    data: {
+                      chosenWord,
+                    },
+                  });
+                }}
+                class={`${
+                  isGameCreationDataValid()
+                    ? "hover:bg-blue-700 "
+                    : "opacity-50 "
+                }mr-1 flex justify-center w-full bg-blue-500  text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline`}
+                type="button"
+              >
+                <span class="mr-1">Share</span>
+                <Icon width={25} path={share} />
+              </button>
+              <button
+                disabled={!isGameCreationDataValid()}
                 onClick={createGame}
-                class="w-full bg-emerald-500 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                class={`${
+                  isGameCreationDataValid()
+                    ? "hover:bg-emerald-700 "
+                    : "opacity-50 "
+                }ml-1 w-full bg-emerald-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline`}
                 type="button"
               >
                 Create Game

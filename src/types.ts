@@ -51,3 +51,12 @@ export interface KeyboardKey {
 }
 
 export type KeyboardLayout = KeyboardKey[][];
+
+export type SupportedLanguage = "en" | "de";
+
+export interface GameCreationData {
+  chosenWord: string;
+  language?: SupportedLanguage;
+  introMessage?: string;
+  emailToShareIfWon?: string;
+}

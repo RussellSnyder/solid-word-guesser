@@ -2,10 +2,6 @@ import { ParentProps, createContext, createSignal, useContext } from "solid-js";
 import { createStore, produce } from "solid-js/store";
 import { keyboardLayout_en_us } from "../components/KeyboardLayouts";
 import { KeyStatus, LetterGrid, LetterInfo, SpecialValue } from "../types";
-import {
-  isActiveIndexFirstColumnInRow,
-  isActiveIndexLastColumnInRow,
-} from "../utils/row.utils";
 import { isLetter } from "../utils/string.utils";
 
 const NUMBER_OF_ROWS = 6;
@@ -42,6 +38,7 @@ const generateInitialKeyboardStates = () => {
     {}
   );
 };
+
 function useProviderValue(wordToGuess: string) {
   const [_, setHasWon] = createSignal(false);
   const [activeRow, setActiveRow] = createSignal(0);
@@ -78,6 +75,7 @@ function useProviderValue(wordToGuess: string) {
       });
 
       if (isInWord) {
+        setKeyboardStates(letter, KeyStatus.PRESENT);
       } else {
         setKeyboardStates(letter, KeyStatus.ABSENT);
       }
@@ -86,7 +84,6 @@ function useProviderValue(wordToGuess: string) {
       }
     });
 
-    console.log(wordToCheck, wordToGuess);
     setLetterGrid(
       produce((s) => {
         s[activeRow()] = updatedRow;
@@ -108,12 +105,12 @@ function useProviderValue(wordToGuess: string) {
   };
 
   const incrementActiveIndexIfInRow = () => {
-    if (!isActiveIndexLastColumnInRow(activeColumn(), wordToGuess.length)) {
+    if (activeColumn() < wordToGuess.length - 1) {
       setActiveColumn((i) => i + 1);
     }
   };
   const decrementActiveIndexIfInRow = () => {
-    if (!isActiveIndexFirstColumnInRow(activeColumn(), wordToGuess.length)) {
+    if (activeColumn() > 0) {
       setActiveColumn((i) => i - 1);
     }
   };

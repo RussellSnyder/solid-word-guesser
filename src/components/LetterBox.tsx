@@ -40,14 +40,14 @@ export const LetterBox = ({ row, column, letterInfo }: LetterBoxProps) => {
   return (
     <div
       class={`col-span-1 mx-1 border-2 ${borderColor} min-h-14 max-w-18 flex content-center`}
+      classList={{
+        "bg-orange-400":
+          !letterInfo.isInCorrrectPosition && letterInfo.isInWord,
+        "bg-green-400": letterInfo.isInCorrrectPosition,
+      }}
     >
       <h3
         class={`text-center text-4xl w-14 flex mx-auto justify-center items-center relative`}
-        classList={{
-          "bg-orange-400":
-            !letterInfo.isInCorrrectPosition && letterInfo.isInWord,
-          "bg-green-400": letterInfo.isInCorrrectPosition,
-        }}
       >
         {letterInfo.letter}
         <Show
@@ -56,7 +56,7 @@ export const LetterBox = ({ row, column, letterInfo }: LetterBoxProps) => {
             columnState() === ColumnState.Active
           }
         >
-          <hr class="w-10 bg-green-500 absolute bottom-1 h-1" />
+          <hr class="w-3/4 bg-green-500 absolute bottom-0.5 h-1" />
         </Show>
       </h3>
     </div>

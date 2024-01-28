@@ -1,16 +1,29 @@
 import { useNavigate, useParams } from "@solidjs/router";
+import { onMount } from "solid-js";
 import { Keyboard } from "../components/Keyboard";
 import { LetterGrid } from "../components/LetterGrid";
 import { GameProvider } from "../providers/GameProvider";
-import { decrypt } from "../utils/encryption.utils";
+import { useUI } from "../providers/UIProvider";
+import { GameCreationData } from "../types";
+import { decodeGameCreationString } from "../utils/encryption.utils";
 
 export default () => {
   const navigate = useNavigate();
+  const { setModalOpen } = useUI();
   const params = useParams();
+  const { gamedata: gameDataString } = params;
+  const gameData: GameCreationData = decodeGameCreationString(gameDataString);
 
-  const { word } = params;
-
-  const wordToGuess = decrypt(word);
+  onMount(() => {
+    if (gameData.introMessage) {
+      setModalOpen({
+        type: "IntroductionMessageModal",
+        data: {
+          message: gameData.introMessage,
+        },
+      });
+    }
+  });
 
   return (
     <div class="container mx-auto px-4">
@@ -24,7 +37,7 @@ export default () => {
       <div class="mt-20 mb-10">
         <h1 class="text-4xl text-center">Guess the word</h1>
       </div>
-      <GameProvider wordToGuess={wordToGuess}>
+      <GameProvider wordToGuess={gameData.chosenWord}>
         <div class="mb-16">
           <LetterGrid />
         </div>

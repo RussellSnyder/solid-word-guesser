@@ -7,8 +7,8 @@ interface KeyProps extends Omit<KeyboardKey, "status"> {}
 
 const statusBgColorMap: Record<KeyStatus, string> = {
   [KeyStatus.DEFAULT]: "",
-  [KeyStatus.PRESENT]: "bg-yellow-300",
-  [KeyStatus.CORRECT]: "bg-green-300",
+  [KeyStatus.PRESENT]: "bg-orange-400",
+  [KeyStatus.CORRECT]: "bg-green-400",
   [KeyStatus.ABSENT]: "bg-slate-300",
 };
 
