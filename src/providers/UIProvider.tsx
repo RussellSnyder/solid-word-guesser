@@ -2,7 +2,7 @@ import { ParentProps, createContext, createSignal, useContext } from "solid-js";
 
 interface ModalDataInstance {
   type: string;
-  data: any;
+  data?: any;
 }
 
 const EmptyModal: ModalDataInstance = {
@@ -10,18 +10,22 @@ const EmptyModal: ModalDataInstance = {
   data: null,
 };
 
-export interface ShareGameModalData {
+export interface ShareGameModal {
   type: "ShareGameModal";
   data: {
     chosenWord: string;
   };
 }
 
-export interface IntroductionMessageModalData {
+export interface IntroductionMessageModal {
   type: "IntroductionMessageModal";
   data: {
     message: string;
   };
+}
+
+export interface WinModal {
+  type: "WinModal";
 }
 
 function useProviderValue() {

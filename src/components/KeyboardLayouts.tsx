@@ -1,5 +1,5 @@
 import { Icon } from "solid-heroicons";
-import { backspace, questionMarkCircle } from "solid-heroicons/outline";
+import { backspace } from "solid-heroicons/outline";
 import { KeyStatus, KeyboardKey, KeyboardLayout, SpecialValue } from "../types";
 const createKey = (
   label: string,
@@ -20,7 +20,7 @@ export const keyboardLayout_en_us: KeyboardLayout = [
   ),
   [
     {
-      label: <Icon height={32} path={questionMarkCircle} />,
+      label: "ENT",
       value: SpecialValue.ENTER,
       status: KeyStatus.DEFAULT,
     },

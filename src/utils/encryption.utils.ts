@@ -8,7 +8,7 @@ export const encodeGameCreationData = (gameCreationData: GameCreationData) => {
   const { chosenWord, introMessage } = gameCreationData;
 
   let gameCreationDataString = chosenWord;
-  gameCreationDataString += `?im=${introMessage}`;
+  gameCreationDataString += `?im=${introMessage ?? ""}`;
 
   const encrypedUrlDataString = encodeText(gameCreationDataString);
   const urlString = encodeURI(encrypedUrlDataString);
@@ -24,8 +24,7 @@ export const decodeGameCreationString = (
 
   return {
     chosenWord: chosenWord.toUpperCase(),
-    introMessage:
-      introMessage && introMessage.length > 0 ? introMessage : undefined,
+    introMessage: introMessage ?? "",
   };
 };
 

@@ -150,7 +150,7 @@ export default () => {
                   setModalOpen({
                     type: "ShareGameModal",
                     data: {
-                      chosenWord,
+                      chosenWord: chosenWord().toUpperCase(),
                     },
                   });
                 }}

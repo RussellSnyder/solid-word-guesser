@@ -3,6 +3,7 @@ import { createStore, produce } from "solid-js/store";
 import { keyboardLayout_en_us } from "../components/KeyboardLayouts";
 import { KeyStatus, LetterGrid, LetterInfo, SpecialValue } from "../types";
 import { isLetter } from "../utils/string.utils";
+import { useUI } from "./UIProvider";
 
 const NUMBER_OF_ROWS = 6;
 
@@ -43,7 +44,7 @@ function useProviderValue(wordToGuess: string) {
   const [_, setHasWon] = createSignal(false);
   const [activeRow, setActiveRow] = createSignal(0);
   const [activeColumn, setActiveColumn] = createSignal(0);
-
+  const { setModalOpen } = useUI();
   const [letterGrid, setLetterGrid] = createStore<LetterGrid>(
     generateLettterGrid(wordToGuess) ?? []
   );
@@ -93,14 +94,18 @@ function useProviderValue(wordToGuess: string) {
 
     if (wordToCheck === wordToGuess) {
       setHasWon(true);
-      alert("you won!");
+      setModalOpen({
+        type: "WinModal",
+      });
     }
 
-    if (activeRow() < NUMBER_OF_ROWS) {
+    if (activeRow() < NUMBER_OF_ROWS - 1) {
       setActiveRow((index) => index + 1);
       setActiveColumn(0);
     } else {
-      alert(`you lost! the word was ${wordToGuess}`);
+      setModalOpen({
+        type: "LoseModal",
+      });
     }
   };
 

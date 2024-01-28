@@ -1,7 +1,7 @@
 import { writeClipboard } from "@solid-primitives/clipboard";
 import { Icon } from "solid-heroicons";
 import { xCircle } from "solid-heroicons/outline";
-import { Show, createSignal } from "solid-js";
+import { Show, createEffect, createSignal } from "solid-js";
 import { useUI } from "../../providers/UIProvider";
 import { encodeGameCreationData } from "../../utils/encryption.utils";
 import { Input } from "../Input";
@@ -14,6 +14,14 @@ export const ShareGameModal = () => {
   const [isCopied, setIsCopied] = createSignal(false);
   const [introMessage, setIntroMessage] = createSignal("");
 
+  createEffect(() => {
+    if (isCopied()) {
+      setTimeout(() => {
+        setIsCopied(false);
+      }, 1500);
+    }
+  });
+
   const modal = () =>
     modalOpen()?.type === "ShareGameModal" ? modalOpen() : null;
 
@@ -23,7 +31,7 @@ export const ShareGameModal = () => {
         ? "http://localhost:5173"
         : "https://solid-word-guesser.netlify.app";
     const shareUrl = `${baseUrl}/play/${encodeGameCreationData({
-      chosenWord: modalOpen()?.data.chosenWord(),
+      chosenWord: modalOpen()?.data.chosenWord,
       introMessage: introMessage(),
     })}`;
     return shareUrl;
@@ -82,7 +90,7 @@ export const ShareGameModal = () => {
                 }}
                 data-modal-hide="medium-modal"
                 type="button"
-                class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                class={`text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center`}
               >
                 {isCopied() ? "Link Copied!" : "Copy Link"}
               </button>
